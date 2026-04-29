@@ -70,8 +70,12 @@ const hud = {
   updated: document.getElementById("updated"),
   sun: document.getElementById("sun"),
   moon: document.getElementById("moon"),
-  top: document.getElementById("top"),
   status: document.getElementById("status"),
+};
+
+const dataHub = {
+  bars: document.getElementById("country-bars"),
+  count: document.getElementById("country-count"),
 };
 
 const scene = new THREE.Scene();
@@ -343,6 +347,17 @@ container.appendChild(renderer.domElement);
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
 camera.position.set(0, 0, 320);
 
+// Shift the frustum so the globe centers in the space to the right of the panel.
+// Panel ~316px (28px margin + 280px min-width + borders). Enlarging the virtual
+// canvas width by that amount and rendering from x=0 pushes the world origin
+// (globe center) PANEL_PX/2 pixels right of screen center.
+const PANEL_PX = 316;
+function applyGlobeOffset() {
+  const W = window.innerWidth, H = window.innerHeight;
+  camera.setViewOffset(W + PANEL_PX, H, 0, 0, W, H);
+}
+applyGlobeOffset();
+
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
@@ -357,6 +372,7 @@ addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  applyGlobeOffset();
 });
 
 let activity = { totalRate: 0, countries: [], updatedAt: null };
@@ -457,10 +473,28 @@ function renderHUD() {
   };
   if (hud.sun) hud.sun.textContent = fmtLL(lastSun);
   if (hud.moon) hud.moon.textContent = fmtLL(lastMoon);
-  const top = [...activity.countries].sort((a, b) => b.value - a.value).slice(0, 5);
-  hud.top.innerHTML = top
-    .map((c) => `<li><span>${c.code}</span><span>${(c.share * 100).toFixed(1)}%</span></li>`)
+}
+
+function renderDataHub() {
+  const sorted = [...activity.countries]
+    .filter((c) => c.share > 0)
+    .sort((a, b) => b.share - a.share);
+
+  const maxShare = sorted[0]?.share || 1;
+
+  dataHub.bars.innerHTML = sorted
+    .map((c) => {
+      const pct = (c.share * 100).toFixed(1);
+      const barW = ((c.share / maxShare) * 100).toFixed(1);
+      return `<div class="bar-row">
+        <span class="bar-code">${c.code}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${barW}%"></div></div>
+        <span class="bar-pct">${pct}%</span>
+      </div>`;
+    })
     .join("");
+
+  dataHub.count.textContent = sorted.length;
 }
 
 async function poll() {
@@ -472,6 +506,7 @@ async function poll() {
     activity = j;
     hud.status.textContent = "";
     renderHUD();
+    renderDataHub();
   } catch (e) {
     hud.status.textContent = "Data unavailable: " + e.message;
   }

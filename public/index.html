@@ -21,18 +21,25 @@
     <span class="bracket tr"></span>
     <span class="bracket bl"></span>
     <span class="bracket br"></span>
-    <div id="hud">
-      <div class="title">AI bot activity</div>
-      <div class="sub">Cloudflare Radar · last hour</div>
-      <div class="stat"><span class="label">Requests</span><span id="total">—</span></div>
-      <div class="stat"><span class="label">Updated</span><span id="updated">—</span></div>
-      <div class="stat"><span class="label">Sun over</span><span id="sun">—</span></div>
-      <div class="stat"><span class="label">Moon over</span><span id="moon">—</span></div>
-      <div class="topwrap">
-        <div class="label">Top countries</div>
-        <ol id="top"></ol>
+    <div id="left-panel">
+      <div id="hud">
+        <div class="title">AI bot activity</div>
+        <div class="sub">Cloudflare Radar · last hour</div>
+        <div class="stat"><span class="label">Requests</span><span id="total">—</span></div>
+        <div class="stat"><span class="label">Updated</span><span id="updated">—</span></div>
+        <div class="stat"><span class="label">Sun over</span><span id="sun">—</span></div>
+        <div class="stat"><span class="label">Moon over</span><span id="moon">—</span></div>
+        <div id="status"></div>
       </div>
-      <div id="status"></div>
+      <div id="data-hub">
+        <div class="title">distribution</div>
+        <div class="sub">request share · all regions</div>
+        <div id="country-bars"></div>
+        <div class="hub-footer">
+          <span class="label">Regions active</span>
+          <span id="country-count">—</span>
+        </div>
+      </div>
     </div>
     <script type="module" src="./app.js"></script>
   </body>
