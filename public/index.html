@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Bot Activity · Cloudflare Radar</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://esm.sh/three@0.160.0",
+          "three/addons/": "https://esm.sh/three@0.160.0/examples/jsm/",
+          "three-globe": "https://esm.sh/three-globe@2.31.1?deps=three@0.160.0"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="globe"></div>
+    <span class="bracket tl"></span>
+    <span class="bracket tr"></span>
+    <span class="bracket bl"></span>
+    <span class="bracket br"></span>
+    <div id="hud">
+      <div class="title">AI bot activity</div>
+      <div class="sub">Cloudflare Radar · last hour</div>
+      <div class="stat"><span class="label">Requests</span><span id="total">—</span></div>
+      <div class="stat"><span class="label">Updated</span><span id="updated">—</span></div>
+      <div class="stat"><span class="label">Sun over</span><span id="sun">—</span></div>
+      <div class="stat"><span class="label">Moon over</span><span id="moon">—</span></div>
+      <div class="topwrap">
+        <div class="label">Top countries</div>
+        <ol id="top"></ol>
+      </div>
+      <div id="status"></div>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

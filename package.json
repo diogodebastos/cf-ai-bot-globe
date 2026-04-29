@@ -1,0 +1,12 @@
+{
+  "name": "cf-ai-bot-globe",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "wrangler pages dev public",
+    "deploy": "wrangler pages deploy public --project-name cf-ai-bot-globe"
+  },
+  "devDependencies": {
+    "wrangler": "^4.86.0"
+  }
+}

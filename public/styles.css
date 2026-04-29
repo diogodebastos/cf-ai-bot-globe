@@ -1,0 +1,179 @@
+@import url("https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap");
+
+:root {
+  --ink: #cfe1f0;
+  --ink-soft: #6c89a0;
+  --ink-faint: #2f4860;
+  --rule: rgba(120, 160, 195, 0.18);
+  --bg: #03070c;
+  --accent: #f6821f;       /* CF orange — only saturated color */
+  --accent-soft: rgba(246, 130, 31, 0.7);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 50% 40%, #061320 0%, #02060b 55%, #000 100%);
+  color: var(--ink);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+}
+
+#globe {
+  position: fixed;
+  inset: 0;
+}
+
+/* fine grain + scanline atmosphere */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(180, 210, 235, 0.025) 0,
+      rgba(180, 210, 235, 0.025) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  mix-blend-mode: screen;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%);
+}
+
+/* corner brackets — radar-station chrome */
+.bracket {
+  position: fixed;
+  width: 22px;
+  height: 22px;
+  border-color: var(--rule);
+  z-index: 2;
+}
+.bracket.tl { top: 12px; left: 12px; border-top: 1px solid; border-left: 1px solid; }
+.bracket.tr { top: 12px; right: 12px; border-top: 1px solid; border-right: 1px solid; }
+.bracket.bl { bottom: 12px; left: 12px; border-bottom: 1px solid; border-left: 1px solid; }
+.bracket.br { bottom: 12px; right: 12px; border-bottom: 1px solid; border-right: 1px solid; }
+
+#hud {
+  position: fixed;
+  top: 28px;
+  left: 28px;
+  z-index: 2;
+  padding: 18px 20px 16px;
+  min-width: 280px;
+  font-size: 11px;
+  line-height: 1.6;
+  background:
+    linear-gradient(180deg, rgba(8, 18, 28, 0.78), rgba(4, 10, 16, 0.6));
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 30px 60px -20px rgba(0, 0, 0, 0.9),
+    inset 0 0 24px rgba(120, 160, 195, 0.04);
+  backdrop-filter: blur(6px);
+}
+
+#hud::before {
+  content: "▮ live";
+  position: absolute;
+  top: -8px;
+  left: 18px;
+  background: var(--bg);
+  padding: 0 8px;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+#hud .title {
+  font-family: "Major Mono Display", monospace;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  margin: 2px 0 2px;
+}
+
+#hud .sub {
+  font-size: 9px;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+#hud .stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  border-top: 1px dashed var(--rule);
+}
+#hud .stat:first-of-type { border-top: 1px solid var(--rule); }
+
+#hud .label {
+  color: var(--ink-soft);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+#hud .stat span:last-child {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+#hud .stat span#total {
+  color: var(--accent);
+  font-weight: 500;
+  font-size: 13px;
+  text-shadow: 0 0 12px rgba(246, 130, 31, 0.45);
+}
+
+#hud .topwrap {
+  margin-top: 12px;
+  border-top: 1px solid var(--rule);
+  padding-top: 10px;
+}
+
+#top {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  font-size: 10px;
+}
+#top li {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+#top li::before {
+  content: "·";
+  color: var(--accent);
+  margin-right: 8px;
+}
+
+#status {
+  margin-top: 10px;
+  font-size: 10px;
+  color: #ff8e6b;
+  letter-spacing: 0.04em;
+  min-height: 14px;
+}
