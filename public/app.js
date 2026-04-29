@@ -79,7 +79,7 @@ const dataHub = {
 };
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
+scene.background = new THREE.Color(0x030810);
 scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
 // Solid black sphere occluder so back-side dots/grid don't bleed through.
@@ -107,7 +107,7 @@ const globe = new Globe()
 // Replace the default shaded earth with a flat dark sphere — keeps the
 // hex-dot land readable and hides the back hemisphere.
 globe.globeMaterial(
-  new THREE.MeshBasicMaterial({ color: 0x000604, transparent: false }),
+  new THREE.MeshBasicMaterial({ color: 0x050f1a, transparent: false }),
 );
 
 scene.add(globe);

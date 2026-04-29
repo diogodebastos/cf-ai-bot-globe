@@ -5,7 +5,7 @@
   --ink-soft: #6c89a0;
   --ink-faint: #2f4860;
   --rule: rgba(120, 160, 195, 0.18);
-  --bg: #03070c;
+  --bg: #0d2238;
   --accent: #f6821f;       /* CF orange — only saturated color */
   --accent-soft: rgba(246, 130, 31, 0.7);
 }
@@ -15,7 +15,7 @@ html, body {
   padding: 0;
   height: 100%;
   background:
-    radial-gradient(ellipse at 50% 40%, #061320 0%, #02060b 55%, #000 100%);
+    radial-gradient(ellipse at 50% 40%, #1a3a5c 0%, #0d2238 55%, #071525 100%);
   color: var(--ink);
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-weight: 300;
