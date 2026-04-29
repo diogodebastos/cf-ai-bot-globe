@@ -154,11 +154,12 @@ body::after {
 
 
 #status {
-  margin-top: 10px;
   font-size: 10px;
   color: #ff8e6b;
   letter-spacing: 0.04em;
-  min-height: 14px;
+}
+#status:not(:empty) {
+  margin-top: 10px;
 }
 
 /* ── Data hub — below live hud ── */
@@ -289,7 +290,7 @@ body::after {
     bottom: 0;
     left: 0;
     right: 0;
-    max-height: 48vh;
+    max-height: 40vh;
     flex-direction: column;
     gap: 0;
     overflow-y: auto;
