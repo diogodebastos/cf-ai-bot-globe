@@ -55,14 +55,27 @@ const COUNTRIES_URL =
 const CITIES_URL =
   "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_populated_places.geojson";
 
-// Cool-graphite radar palette — orange flashes are the only saturated color.
-const COLOR_LAND_DAY   = "#7c9bb0";   // sun-lit land (muted steel blue)
-const COLOR_LAND_NIGHT = "#152230";   // shadowed land (deep navy)
-const COLOR_BORDER     = "rgba(190, 215, 235, 0.22)";
-const COLOR_GRID       = "#1a3548";
-const COLOR_ATMO       = "#3a6a88";
-const COLOR_FLASH      = "#f6821f";
-const COLOR_FLASH_RGB  = "246, 130, 31";
+const COLOR_FLASH     = "#f43f5e";
+const COLOR_FLASH_RGB = "244, 63, 94";
+const RADAR_ALTITUDE = 0.014; // sit just above land-dot grid (0.004) + borders (0.006)
+
+const THEMES = {
+  light: {
+    globeMat:    0xebe4d6,
+    atmoColor:   "#d96f12",
+    borderColor: "rgba(217, 111, 18, 0.5)",
+    landDay:     "#6b5040",
+    landNight:   "#9e8878",
+  },
+  dark: {
+    // llm-circuits dark palette
+    globeMat:    0x1c1917,
+    atmoColor:   "#f6821f",
+    borderColor: "rgba(246, 130, 31, 0.55)",
+    landDay:     "#e8e3dc",
+    landNight:   "#706c68",
+  },
+};
 
 const container = document.getElementById("globe");
 const hud = {
@@ -78,52 +91,40 @@ const dataHub = {
   count: document.getElementById("country-count"),
 };
 
+const storedTheme = localStorage.getItem("theme");
+let activeTheme = storedTheme === "light" ? "light" : "dark";
+
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x030810);
+scene.background = null; // transparent — CSS grid on #globe shows through
 scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
 // Solid black sphere occluder so back-side dots/grid don't bleed through.
 const globe = new Globe()
   .showAtmosphere(true)
-  .atmosphereColor(COLOR_ATMO)
+  .atmosphereColor(THEMES[activeTheme].atmoColor)
   .atmosphereAltitude(0.18)
-  .ringAltitude(0.012)
+  .ringAltitude(0.014)
   // Stronger pulse: slower fade-out, brighter peak, never fully transparent
   // until the very end so the ring is visible across its full propagation.
   .ringColor(() => (t) => {
-    // t goes 0 → 1 over one repeat period
-    const a = Math.pow(1 - t, 1.6) * 0.95 + 0.05;
+    const a = Math.pow(1 - t, 0.6) * 0.95 + 0.05;
     return `rgba(${COLOR_FLASH_RGB}, ${a.toFixed(3)})`;
   })
   .ringMaxRadius((d) => d.maxR ?? 4.5)
   .ringPropagationSpeed(2.2)
   // Re-emit a ring every 700ms while the flash is alive → real pulsation.
   .ringRepeatPeriod(700)
-  .pointAltitude(0.012)
+  .pointAltitude(RADAR_ALTITUDE)
   .pointRadius(0.25)
   .pointColor(() => COLOR_FLASH)
   .pointsMerge(false);
 
-// Replace the default shaded earth with a flat dark sphere — keeps the
-// hex-dot land readable and hides the back hemisphere.
-globe.globeMaterial(
-  new THREE.MeshBasicMaterial({ color: 0x050f1a, transparent: false }),
-);
+// Replace the default shaded earth with a flat sphere — keeps dots readable.
+const globeSphereMat = new THREE.MeshBasicMaterial({ color: THEMES[activeTheme].globeMat });
+globe.globeMaterial(globeSphereMat);
 
 scene.add(globe);
 
-// Lat/lon wireframe grid laid over the globe.
-const gridRadius = globe.getGlobeRadius() * 1.001;
-const gridGeo = new THREE.SphereGeometry(gridRadius, 36, 24);
-const gridWire = new THREE.LineSegments(
-  new THREE.WireframeGeometry(gridGeo),
-  new THREE.LineBasicMaterial({
-    color: COLOR_GRID,
-    transparent: true,
-    opacity: 0.22,
-  }),
-);
-scene.add(gridWire);
 
 // ---------------------------------------------------------------------------
 // Per-dot land grid: one InstancedMesh of small dots, lit per-instance in the
@@ -131,8 +132,8 @@ scene.add(gridWire);
 // hexPolygons (one color per country) with true per-dot lighting.
 // ---------------------------------------------------------------------------
 const DOT_ALT = 0.004;
-const DOT_BASE_RADIUS = globe.getGlobeRadius() * 0.000005; // smallest hamlet
-const DOT_MAX_RADIUS  = globe.getGlobeRadius() * 0.005;  // megacities (Tokyo, Delhi)
+const DOT_BASE_RADIUS = globe.getGlobeRadius() * 0.000075; // smallest hamlet
+const DOT_MAX_RADIUS  = globe.getGlobeRadius() * 0.0075;  // megacities (Tokyo, Delhi)
 
 let landMesh = null;
 function buildCityDots(cityFeatures) {
@@ -157,8 +158,8 @@ function buildCityDots(cityFeatures) {
     depthWrite: false,
     uniforms: {
       sunDir:   { value: new THREE.Vector3(1, 0, 0) },
-      colDay:   { value: new THREE.Color(COLOR_LAND_DAY) },
-      colNight: { value: new THREE.Color(COLOR_LAND_NIGHT) },
+      colDay:   { value: new THREE.Color(THEMES[activeTheme].landDay) },
+      colNight: { value: new THREE.Color(THEMES[activeTheme].landNight) },
     },
     vertexShader: /* glsl */ `
       attribute vec3 instanceDir;
@@ -175,11 +176,9 @@ function buildCityDots(cityFeatures) {
       uniform vec3 colNight;
       varying float vSunDot;
       void main() {
-        float lit = smoothstep(-0.20, 0.20, vSunDot);
+        float lit = smoothstep(-0.08, 0.08, vSunDot);
         vec3 col = mix(colNight, colDay, lit);
-        // Lower the alpha on night dots so the dark hemisphere recedes,
-        // and keep day dots translucent so orange flashes win the eye.
-        float alpha = mix(0.40, 0.72, lit);
+        float alpha = mix(0.0, 0.72, lit);
         gl_FragColor = vec4(col, alpha);
       }
     `,
@@ -187,6 +186,7 @@ function buildCityDots(cityFeatures) {
 
   const mesh = new THREE.InstancedMesh(geom, mat, cities.length);
   mesh.frustumCulled = false;
+  mesh.renderOrder = 1;
 
   const dirs = new Float32Array(cities.length * 3);
   const pos = new THREE.Vector3();
@@ -234,7 +234,7 @@ Promise.all([
       .polygonsData(countriesData)
       .polygonCapColor(() => "rgba(0,0,0,0)")
       .polygonSideColor(() => "rgba(0,0,0,0)")
-      .polygonStrokeColor(() => COLOR_BORDER)
+      .polygonStrokeColor(() => THEMES[activeTheme].borderColor)
       .polygonAltitude(0.006);
   })
   .catch((e) => console.warn("countries load failed", e));
@@ -335,7 +335,8 @@ function updateSun() {
   }
 }
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setClearColor(0x000000, 0); // fully transparent clear
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -366,7 +367,7 @@ controls.enablePan = false;
 controls.minDistance = 160;
 controls.maxDistance = 600;
 controls.autoRotate = true;
-controls.autoRotateSpeed = 0.25;
+controls.autoRotateSpeed = 1.2;
 
 addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -428,6 +429,30 @@ function tickFlashes() {
   while (points.length && now - points[0].born > POINT_TTL) points.shift();
   globe.ringsData(rings);
   globe.pointsData(points.map((p) => ({ lat: p.lat, lng: p.lng })));
+  boostRadarLayers();
+}
+
+let radarLayersBoosted = false;
+function boostRadarLayers() {
+  if (radarLayersBoosted) return;
+  const tryBoost = (arr) => {
+    if (!arr.length || !arr[0].__threeObj) return false;
+    let obj = arr[0].__threeObj;
+    while (obj.parent && obj.parent !== globe) obj = obj.parent;
+    obj.renderOrder = 2;
+    obj.traverse((c) => {
+      c.renderOrder = 2;
+      if (c.material) {
+        c.material.depthWrite = false;
+        c.material.transparent = true;
+        c.material.needsUpdate = true;
+      }
+    });
+    return true;
+  };
+  const rOk = rings.length ? tryBoost(rings) : false;
+  const pOk = points.length ? tryBoost(points) : false;
+  if (rOk || pOk) radarLayersBoosted = true;
 }
 
 let scheduleAcc = 0;
@@ -438,7 +463,7 @@ function animate() {
   const dt = now - lastFrame;
   lastFrame = now;
 
-  const fps = Math.max(1, Math.min(30, activity.totalRate / 80));
+  const fps = Math.max(2, Math.min(60, activity.totalRate / 30));
   scheduleAcc += dt;
   const interval = 1000 / fps;
   while (scheduleAcc >= interval) {
@@ -452,6 +477,44 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
+
+// ── Theme system ──────────────────────────────────────────────────────────────
+
+function applyTheme(theme) {
+  activeTheme = theme;
+  const t = THEMES[theme];
+  globeSphereMat.color.set(t.globeMat);
+  globe.atmosphereColor(t.atmoColor);
+  if (countriesData.length) {
+    globe.polygonStrokeColor(() => t.borderColor);
+  }
+  if (landMesh) {
+    landMesh.material.uniforms.colDay.value.set(t.landDay);
+    landMesh.material.uniforms.colNight.value.set(t.landNight);
+  }
+}
+
+const toggleBtn = document.getElementById("theme-toggle");
+
+const SVG_SUN = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="7.05" y2="7.05"/><line x1="16.95" y1="16.95" x2="19.07" y2="19.07"/><line x1="4.93" y1="19.07" x2="7.05" y2="16.95"/><line x1="16.95" y1="7.05" x2="19.07" y2="4.93"/></svg>`;
+const SVG_MOON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+
+function syncToggleIcon() {
+  // Show the icon for the mode you'll switch TO on click
+  toggleBtn.innerHTML = activeTheme === "dark" ? SVG_SUN : SVG_MOON;
+  toggleBtn.title = activeTheme === "dark" ? "Switch to light mode" : "Switch to dark mode";
+}
+syncToggleIcon();
+
+toggleBtn.addEventListener("click", () => {
+  const next = activeTheme === "dark" ? "light" : "dark";
+  document.documentElement.classList.toggle("dark", next === "dark");
+  localStorage.setItem("theme", next);
+  applyTheme(next);
+  syncToggleIcon();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function fmt(n) {
   if (n >= 1e9) return (n / 1e9).toFixed(2) + "B";

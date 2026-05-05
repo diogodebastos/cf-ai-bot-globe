@@ -1,21 +1,40 @@
 @import url("https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap");
 
+/* ── Light mode (default) ── */
 :root {
-  --ink: #cfe1f0;
-  --ink-soft: #6c89a0;
-  --ink-faint: #2f4860;
-  --rule: rgba(120, 160, 195, 0.18);
-  --bg: #0d2238;
-  --accent: #f6821f;       /* CF orange — only saturated color */
+  --ink: #2d2622;
+  --ink-soft: #8a807a;
+  --ink-faint: #ddd3c5;
+  --rule: rgba(120, 90, 60, 0.16);
+  --bg: #ebe4d6;
+  --accent: #d96f12;
+  --accent-soft: rgba(217, 111, 18, 0.7);
+  --panel-bg: rgba(235, 228, 214, 0.92);
+  --panel-inner: rgba(217, 111, 18, 0.03);
+  --panel-shadow-a: rgba(60, 40, 20, 0.06);
+  --panel-shadow-b: rgba(60, 40, 20, 0.1);
+}
+
+/* ── Dark mode ── */
+html.dark {
+  --ink: #f5f5f4;
+  --ink-soft: #a8a29e;
+  --ink-faint: #292524;
+  --rule: rgba(160, 140, 120, 0.18);
+  --bg: #0c0a09;
+  --accent: #f6821f;
   --accent-soft: rgba(246, 130, 31, 0.7);
+  --panel-bg: rgba(12, 10, 9, 0.92);
+  --panel-inner: rgba(246, 130, 31, 0.03);
+  --panel-shadow-a: rgba(0, 0, 0, 0.6);
+  --panel-shadow-b: rgba(0, 0, 0, 0.9);
 }
 
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background:
-    radial-gradient(ellipse at 50% 40%, #1a3a5c 0%, #0d2238 55%, #071525 100%);
+  background: var(--bg);
   color: var(--ink);
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-weight: 300;
@@ -23,18 +42,37 @@ html, body {
   overflow: hidden;
 }
 
+/* Grid lives here — behind the transparent WebGL canvas */
 #globe {
   position: fixed;
   inset: 0;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(246, 130, 31, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(246, 130, 31, 0.07) 1px, transparent 1px),
+    radial-gradient(rgba(246, 130, 31, 0.16) 1px, transparent 1px);
+  background-size: 96px 96px, 96px 96px, 24px 24px;
 }
 
-/* fine grain + scanline atmosphere */
+html.dark #globe {
+  background-image:
+    linear-gradient(rgba(246, 130, 31, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(246, 130, 31, 0.05) 1px, transparent 1px),
+    radial-gradient(rgba(246, 130, 31, 0.11) 1px, transparent 1px);
+}
+
+/* Scanlines in dark mode only */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 1;
+  opacity: 0;
+}
+
+html.dark body::before {
+  opacity: 1;
   background:
     repeating-linear-gradient(
       to bottom,
@@ -53,10 +91,15 @@ body::after {
   pointer-events: none;
   z-index: 1;
   background:
+    radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,0.3) 100%);
+}
+
+html.dark body::after {
+  background:
     radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%);
 }
 
-/* corner brackets — radar-station chrome */
+/* ── Corner brackets ── */
 .bracket {
   position: fixed;
   width: 22px;
@@ -68,6 +111,33 @@ body::after {
 .bracket.tr { top: 12px; right: 12px; border-top: 1px solid; border-right: 1px solid; }
 .bracket.bl { bottom: 12px; left: 12px; border-bottom: 1px solid; border-left: 1px solid; }
 .bracket.br { bottom: 12px; right: 12px; border-bottom: 1px solid; border-right: 1px solid; }
+
+/* ── Theme toggle ── */
+#theme-toggle {
+  position: fixed;
+  top: 14px;
+  right: 44px;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--panel-bg);
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  backdrop-filter: blur(6px);
+}
+#theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 #left-panel {
   position: fixed;
@@ -81,18 +151,20 @@ body::after {
 }
 
 #hud {
+  position: relative;
   padding: 18px 20px 16px;
   min-width: 280px;
   font-size: 11px;
   line-height: 1.6;
   background:
-    linear-gradient(180deg, rgba(8, 18, 28, 0.78), rgba(4, 10, 16, 0.6));
+    linear-gradient(180deg, var(--panel-bg), var(--panel-bg)),
+    linear-gradient(180deg, var(--panel-inner), transparent);
   border: 1px solid var(--rule);
   border-radius: 2px;
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.6),
-    0 30px 60px -20px rgba(0, 0, 0, 0.9),
-    inset 0 0 24px rgba(120, 160, 195, 0.04);
+    0 0 0 1px var(--panel-shadow-a),
+    0 30px 60px -20px var(--panel-shadow-b),
+    inset 0 0 24px var(--panel-inner);
   backdrop-filter: blur(6px);
 }
 
@@ -152,31 +224,32 @@ body::after {
   text-shadow: 0 0 12px rgba(246, 130, 31, 0.45);
 }
 
-
 #status {
   font-size: 10px;
-  color: #ff8e6b;
+  color: var(--accent);
   letter-spacing: 0.04em;
 }
 #status:not(:empty) {
   margin-top: 10px;
 }
 
-/* ── Data hub — below live hud ── */
+/* ── Data hub ── */
 #data-hub {
+  position: relative;
   padding: 18px 20px 16px;
   min-width: 280px;
   flex: 1;
   font-size: 11px;
   line-height: 1.6;
   background:
-    linear-gradient(180deg, rgba(8, 18, 28, 0.78), rgba(4, 10, 16, 0.6));
+    linear-gradient(180deg, var(--panel-bg), var(--panel-bg)),
+    linear-gradient(180deg, var(--panel-inner), transparent);
   border: 1px solid var(--rule);
   border-radius: 2px;
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.6),
-    0 30px 60px -20px rgba(0, 0, 0, 0.9),
-    inset 0 0 24px rgba(120, 160, 195, 0.04);
+    0 0 0 1px var(--panel-shadow-a),
+    0 30px 60px -20px var(--panel-shadow-b),
+    inset 0 0 24px var(--panel-inner);
   backdrop-filter: blur(6px);
   display: flex;
   flex-direction: column;
@@ -285,6 +358,11 @@ body::after {
     overflow: hidden;
   }
 
+  #theme-toggle {
+    top: 8px;
+    right: 8px;
+  }
+
   #left-panel {
     top: auto;
     bottom: 0;
@@ -296,7 +374,7 @@ body::after {
     overflow-y: auto;
     scrollbar-width: none;
     border-top: 1px solid var(--rule);
-    background: linear-gradient(0deg, rgba(2, 6, 12, 0.97), rgba(3, 7, 12, 0.88));
+    background: var(--panel-bg);
     backdrop-filter: blur(10px);
   }
   #left-panel::-webkit-scrollbar { display: none; }

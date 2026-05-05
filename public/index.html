@@ -4,7 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI Bot Activity · Cloudflare Radar</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="stylesheet" href="./styles.css" />
+    <script>
+      // Apply saved theme before first paint to prevent flash
+      (function () {
+        const saved = localStorage.getItem("theme") || "dark";
+        if (saved === "dark") document.documentElement.classList.add("dark");
+      })();
+    </script>
     <script type="importmap">
       {
         "imports": {
@@ -21,6 +29,7 @@
     <span class="bracket tr"></span>
     <span class="bracket bl"></span>
     <span class="bracket br"></span>
+    <button id="theme-toggle" aria-label="Toggle theme"></button>
     <div id="left-panel">
       <div id="hud">
         <div class="title">AI bot activity</div>
